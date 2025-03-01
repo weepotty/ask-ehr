@@ -226,6 +226,90 @@ with st.form(key="query_form"):
     query = st.text_input("Your question:")
     submit_button = st.form_submit_button("Submit")
 
+
+# Add an improved function to post-process answers for different question types
+def process_answer(question, answer, context):
+    # Convert question to lowercase for easier matching
+    question_lower = question.lower()
+
+    # Check for different question types
+    if any(
+        keyword in question_lower
+        for keyword in ["medication", "medicine", "drug", "prescription"]
+    ):
+        if "Medications:" in context:
+            # Extract medication information
+            medications_section = context.split("Medications:")[1].split("\n\n")[0]
+            medication_lines = [
+                line.strip()
+                for line in medications_section.split("\n")
+                if line.strip().startswith("-")
+            ]
+            if medication_lines:
+                medications = [
+                    med.strip("- ").split(",")[0] for med in medication_lines
+                ]
+                return f"The patient is on the following medications: {', '.join(medications)}"
+
+    elif any(keyword in question_lower for keyword in ["allergy", "allergic"]):
+        if "Allergies:" in context:
+            # Extract allergy information
+            allergies_section = context.split("Allergies:")[1].split("\n\n")[0]
+            allergy_lines = [
+                line.strip()
+                for line in allergies_section.split("\n")
+                if line.strip().startswith("-")
+            ]
+            if allergy_lines:
+                allergies = [
+                    allergy.strip("- ").split(":")[0] for allergy in allergy_lines
+                ]
+                return (
+                    f"The patient has the following allergies: {', '.join(allergies)}"
+                )
+
+    elif any(
+        keyword in question_lower for keyword in ["diagnosis", "condition", "disease"]
+    ):
+        if "Diagnoses:" in context:
+            # Extract diagnosis information
+            diagnoses_section = context.split("Diagnoses:")[1].split("\n\n")[0]
+            diagnosis_lines = [
+                line.strip()
+                for line in diagnoses_section.split("\n")
+                if line.strip().startswith("-")
+            ]
+            if diagnosis_lines:
+                diagnoses = [
+                    diag.strip("- ").split(" (ICD")[0] for diag in diagnosis_lines
+                ]
+                return f"The patient has been diagnosed with: {', '.join(diagnoses)}"
+
+    elif "test" in question_lower or "result" in question_lower:
+        # Try to find test results in the context
+        test_sections = []
+        if "Test Result" in context:
+            for section in context.split("Test Result"):
+                if section.strip():
+                    test_sections.append("Test Result" + section.split("\n\n")[0])
+
+            if test_sections:
+                return f"The patient has the following test results:\n" + "\n".join(
+                    test_sections
+                )
+
+    # For other types of questions, try to improve the BERT answer
+    bert_answer = answer["answer"]
+
+    # If the answer is very short, try to find the sentence containing it for more context
+    if len(bert_answer.split()) < 3:
+        for sentence in context.split(". "):
+            if bert_answer in sentence:
+                return sentence + "."
+
+    return bert_answer
+
+
 # Process the query when the form is submitted
 if submit_button and query:
     # Generate embedding for the query
@@ -244,11 +328,14 @@ if submit_button and query:
     with st.spinner("Generating answer..."):
         answer = qa_model(question=query, context=context)
 
+    # Process the answer for special cases
+    processed_answer = process_answer(query, answer, context)
+
     # Add to chat history
     st.session_state.qa_history.append(
         {
             "question": query,
-            "answer": answer["answer"],
+            "answer": processed_answer,  # Use the processed answer
             "confidence": answer["score"],
             "sources": [
                 {"source": chunks[i]["source"], "relevance": similarity_scores[i]}
@@ -259,7 +346,7 @@ if submit_button and query:
 
     # Display answer
     st.subheader("Answer")
-    st.write(answer["answer"])
+    st.write(processed_answer)  # Display the processed answer
     st.write(f"Confidence: {answer['score']:.2%}")
 
     # Display source information
