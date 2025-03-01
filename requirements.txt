@@ -3,3 +3,4 @@ transformers
 sentence-transformers
 scikit-learn
 torch
+openai>=1.0.0

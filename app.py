@@ -1,12 +1,16 @@
 # Import necessary libraries
-from transformers import pipeline
+from sentence_transformers import SentenceTransformer
 import json
 import streamlit as st
-from sentence_transformers import SentenceTransformer
 import numpy as np
-from sklearn.metrics.pairwise import cosine_similarity
 import faiss
+import os
+from dotenv import load_dotenv
+from huggingface_hub import InferenceClient
+from transformers import T5Tokenizer, T5ForConditionalGeneration
+import re
 
+load_dotenv()
 # Set up Streamlit page
 st.set_page_config(page_title="Patient Information QA System", layout="wide")
 st.title("Ask EHR")
@@ -19,140 +23,124 @@ if "messages" not in st.session_state:
 # Load the patient data
 @st.cache_data
 def load_patient_data():
-    with open("data/example.json", "r") as f:
+    with open("data/data3.json", "r") as f:
         return json.load(f)
 
 
-# Process and chunk the patient data
+# Process and chunk the patient data using a flattened JSON approach with grouping
 @st.cache_data
 def process_patient_data(data):
+    # First, flatten the JSON to get all paths
+    def collect_paths(data, prefix="", paths=None):
+        if paths is None:
+            paths = []
+
+        if isinstance(data, dict):
+            for key, value in data.items():
+                new_prefix = f"{prefix}.{key}" if prefix else key
+                collect_paths(value, new_prefix, paths)
+        elif isinstance(data, list):
+            for i, item in enumerate(data):
+                new_prefix = f"{prefix}[{i}]"
+                collect_paths(item, new_prefix, paths)
+        else:
+            # This is a leaf node
+            paths.append((prefix, data))
+
+        return paths
+
+    # Collect all paths
+    all_paths = collect_paths(data)
+
+    # Group paths by their top-level key
+    grouped_paths = {}
+    for path, value in all_paths:
+        top_level = path.split(".")[0]
+        if top_level not in grouped_paths:
+            grouped_paths[top_level] = []
+        grouped_paths[top_level].append((path, value))
+
+    # Create chunks from grouped paths
     chunks = []
-    patient_data = data["patient"]
+    for top_level, paths in grouped_paths.items():
+        # Format the section title
+        section_title = top_level.replace("_", " ").title()
+        content = f"## {section_title}\n\n"
 
-    # Process basic information
-    basic_info = f"Patient name: {patient_data['name']}\n"
-    basic_info += f"Date of birth: {patient_data['dob']}\n"
-    basic_info += f"NHS Number: {patient_data['nhs_number']}\n"
-    basic_info += f"Address: {patient_data['address']}\n"
-    basic_info += f"Phone: {patient_data['phone']}\n"
-    chunks.append({"content": basic_info, "source": "Basic Information"})
+        # Group by second level if available
+        second_level_groups = {}
+        for path, value in paths:
+            parts = path.split(".")
+            if len(parts) > 1:
+                second_level = parts[1]
+                if "[" in second_level:  # Handle array indices
+                    second_level = second_level.split("[")[0]
 
-    # Process GP information
-    gp_info = "GP Information:\n"
-    gp_info += f"Name: {patient_data['gp']['name']}\n"
-    gp_info += f"Practice: {patient_data['gp']['practice']}\n"
-    gp_info += f"Address: {patient_data['gp']['address']}\n"
-    gp_info += f"Phone: {patient_data['gp']['phone']}\n"
-    chunks.append({"content": gp_info, "source": "GP Information"})
+                if second_level not in second_level_groups:
+                    second_level_groups[second_level] = []
+                second_level_groups[second_level].append((path, value))
+            else:
+                # Direct properties of the top level
+                formatted_path = path.replace("_", " ").title()
+                content += f"- **{formatted_path}**: {value}  \n"
 
-    # Process diagnoses
-    diagnoses_info = "Diagnoses:\n"
-    for diagnosis in patient_data["diagnoses"]:
-        diagnoses_info += f"- {diagnosis['condition']} (ICD-10: {diagnosis['icd_10_code']}), diagnosed on {diagnosis['date_diagnosed']}\n"
-    chunks.append({"content": diagnoses_info, "source": "Diagnoses"})
+        # Add second level groups
+        for second_level, subpaths in second_level_groups.items():
+            # Format the subsection title
+            subsection_title = second_level.replace("_", " ").title()
+            content += f"\n### {subsection_title}  \n"
 
-    # Process allergies
-    allergies_info = "Allergies:\n"
-    for allergy in patient_data["allergies"]:
-        allergies_info += f"- {allergy['substance']}: {allergy['reaction']} (Severity: {allergy['severity']})\n"
-    chunks.append({"content": allergies_info, "source": "Allergies"})
+            # Check if this is a list of items
+            is_list = any("[" in path for path, _ in subpaths)
 
-    # Process medications
-    medications_info = "Medications:\n"
-    for medication in patient_data["medications"]:
-        end_date = medication["end_date"] if medication["end_date"] else "ongoing"
-        medications_info += f"- {medication['name']} {medication['dosage']} {medication['unit']} {medication['frequency']}, "
-        medications_info += f"started {medication['start_date']}, {end_date}\n"
-    chunks.append({"content": medications_info, "source": "Medications"})
+            if is_list:
+                # Group by list index
+                list_items = {}
+                for path, value in subpaths:
+                    # Extract the index from the path
+                    match = re.search(r"\[(\d+)\]", path)
+                    if match:
+                        index = int(match.group(1))
+                        if index not in list_items:
+                            list_items[index] = []
 
-    # Process seizure history
-    seizure_info = "Seizure History:\n"
-    for seizure in patient_data["seizure_history"]:
-        seizure_info += f"- {seizure['date']}: {seizure['description']}\n"
-    chunks.append({"content": seizure_info, "source": "Seizure History"})
+                        # Get the property name (after the index)
+                        remaining_path = path.split("]")[-1]
+                        if remaining_path.startswith("."):
+                            remaining_path = remaining_path[1:]
 
-    # Process social history
-    social_info = "Social History:\n"
-    social_info += f"Occupation: {patient_data['social_history']['occupation']}\n"
-    social_info += (
-        f"Smoking Status: {patient_data['social_history']['smoking_status']}\n"
-    )
-    social_info += f"Alcohol Consumption: {patient_data['social_history']['alcohol_consumption']}\n"
-    social_info += (
-        f"Living Situation: {patient_data['social_history']['living_situation']}\n"
-    )
-    chunks.append({"content": social_info, "source": "Social History"})
+                        property_name = (
+                            remaining_path.split(".")[-1] if remaining_path else "value"
+                        )
+                        list_items[index].append((property_name, value))
 
-    # Process appointments
-    for appointment in patient_data["appointments"]:
-        appointment_info = f"Appointment ({appointment['date']}):\n"
-        appointment_info += f"Type: {appointment['type']}\n"
-        appointment_info += f"Location: {appointment['location']}\n"
-        if "consultant" in appointment:
-            appointment_info += f"Consultant: {appointment['consultant']}\n"
-        elif "gp" in appointment:
-            appointment_info += f"GP: {appointment['gp']}\n"
-        appointment_info += f"Notes: {appointment['notes']}\n"
-        chunks.append(
-            {
-                "content": appointment_info,
-                "source": f"Appointment - {appointment['date']} - {appointment['type']}",
-            }
-        )
+                # Format each list item
+                for index, properties in sorted(list_items.items()):
+                    # Try to find a name property for a better title
+                    item_name = next(
+                        (
+                            value
+                            for prop, value in properties
+                            if prop.lower() in ["name", "condition", "type"]
+                        ),
+                        f"Item {index+1}",
+                    )
+                    content += f"\n#### {item_name}  \n"
 
-    # Process discharge summary
-    discharge_info = (
-        f"Discharge Summary ({patient_data['discharge_summary']['date']}):\n"
-    )
-    discharge_info += f"Admitting Diagnosis: {patient_data['discharge_summary']['admitting_diagnosis']}\n"
-    discharge_info += f"Hospital: {patient_data['discharge_summary']['hospital']}\n"
-    discharge_info += (
-        f"Length of Stay: {patient_data['discharge_summary']['length_of_stay']}\n"
-    )
-    discharge_info += f"Summary: {patient_data['discharge_summary']['free_text']}\n"
-    chunks.append(
-        {
-            "content": discharge_info,
-            "source": f"Discharge Summary - {patient_data['discharge_summary']['date']}",
-        }
-    )
+                    for prop, value in properties:
+                        formatted_prop = prop.replace("_", " ").title()
+                        content += f"- **{formatted_prop}**: {value}  \n"
 
-    # Process test results
-    for test in patient_data["test_results"]:
-        test_info = f"Test Result ({test['date']}):\n"
-        test_info += f"Test: {test['test']}\n"
-        test_info += f"Location: {test['location']}\n"
-        if "findings" in test:
-            test_info += f"Findings: {test['findings']}\n"
-        elif "results" in test:
-            test_info += "Results:\n"
-            for result_name, result_data in test["results"].items():
-                test_info += (
-                    f"- {result_name}: {result_data['value']} {result_data['unit']} "
-                )
-                test_info += f"(Normal range: {result_data['normal_range']})\n"
-        chunks.append(
-            {
-                "content": test_info,
-                "source": f"Test Result - {test['date']} - {test['test']}",
-            }
-        )
+                    content += "\n"
+            else:
+                # Regular properties
+                for path, value in subpaths:
+                    # Get the property name (last part of the path)
+                    property_name = path.split(".")[-1]
+                    formatted_prop = property_name.replace("_", " ").title()
+                    content += f"- **{formatted_prop}**: {value}  \n"
 
-    # Process theatre visits
-    for visit in patient_data["theatre_visits"]:
-        visit_info = f"Theatre Visit ({visit['date']}):\n"
-        visit_info += f"Specialty: {visit['specialty']}\n"
-        visit_info += (
-            f"Procedure: {visit['procedure']} (Code: {visit['procedure_code']})\n"
-        )
-        visit_info += f"Admission ID: {visit['admission_id']}\n"
-        visit_info += f"Procedure Time: {visit['procedure_start_time']} to {visit['procedure_end_time']}\n"
-        chunks.append(
-            {
-                "content": visit_info,
-                "source": f"Theatre Visit - {visit['date']} - {visit['procedure']}",
-            }
-        )
+        chunks.append({"content": content, "source": section_title})
 
     return chunks
 
@@ -170,13 +158,7 @@ def generate_embeddings(chunks, _model):
     return embeddings
 
 
-# Load QA model
-@st.cache_resource
-def load_qa_model():
-    return pipeline("question-answering", model="deepset/bert-base-cased-squad2")
-
-
-# After generating embeddings, create and initialize FAISS index
+# Create FAISS index
 @st.cache_resource
 def create_faiss_index(embeddings):
     # Convert embeddings to float32 (required by FAISS)
@@ -194,23 +176,202 @@ def create_faiss_index(embeddings):
     return index
 
 
-def generate_response(qa_model, query, context):
-    # Use the QA model to generate a response
-    result = qa_model(question=query, context=context)
-    return result["answer"]
+# Improve the function to find which chunks were actually used in the answer
+def find_referenced_chunks(answer, chunks, relevant_chunks):
+    """
+    Identify which chunks were actually referenced in the answer with stricter filtering.
+    """
+    referenced_chunks = []
+    seen_sources = set()  # Track sources we've already included
+    answer_lower = answer.lower()
+
+    # For each relevant chunk, check if specific content from it appears in the answer
+    for chunk in relevant_chunks:
+        # Extract specific data points from the chunk
+        key_phrases = []
+
+        # Extract values from markdown bullet points (more specific matching)
+        bullet_points = re.findall(r"\*\*(.*?)\*\*: (.*?)(?:\n|$)", chunk)
+        for key, value in bullet_points:
+            # Only consider substantial values (not dates or single words)
+            if len(value.strip()) > 5 and not re.match(
+                r"^\d{4}-\d{2}-\d{2}$", value.strip()
+            ):
+                key_phrases.append((key.lower(), value.strip().lower()))
+
+        # Check if any specific key-value pair is in the answer
+        is_referenced = False
+        matching_phrases = []
+
+        for key, phrase in key_phrases:
+            # Check for the specific value
+            if phrase in answer_lower and len(phrase) > 5:
+                is_referenced = True
+                matching_phrases.append((key, phrase))
+
+        # Only include chunks with specific matching content
+        if is_referenced:
+            # Get the source from the original chunk
+            source = next(
+                (c["source"] for c in chunks if c["content"] == chunk), "Unknown"
+            )
+
+            # Skip if we've already included this source
+            if source in seen_sources:
+                continue
+
+            seen_sources.add(source)
+
+            # Create a mini-chunk with just the matching information
+            mini_chunk = ""
+
+            # Get the section title from the chunk
+            section_match = re.search(r"^## (.*?)$", chunk, re.MULTILINE)
+            if section_match:
+                section_title = section_match.group(1)
+                mini_chunk += f"## {section_title}\n\n"
+
+            # Add only the matching bullet points
+            for key, phrase in matching_phrases:
+                # Find the original formatting of the key and value
+                for original_key, original_value in bullet_points:
+                    if original_key.lower() == key and phrase in original_value.lower():
+                        mini_chunk += f"- **{original_key}**: {original_value}\n"
+
+            # Add this mini-chunk to the referenced chunks
+            if mini_chunk:
+                referenced_chunks.append(
+                    {"content": mini_chunk.strip(), "source": source}
+                )
+
+    # If no chunks were referenced, include a minimal version of the most relevant chunk
+    if not referenced_chunks and relevant_chunks:
+        # Get the most relevant chunk
+        most_relevant = relevant_chunks[0]
+        source = next(
+            (c["source"] for c in chunks if c["content"] == most_relevant), "Unknown"
+        )
+
+        # Extract the section title
+        section_match = re.search(r"^## (.*?)$", most_relevant, re.MULTILINE)
+        section_title = section_match.group(1) if section_match else "Information"
+
+        # Create a minimal chunk with just the section title
+        mini_chunk = f"## {section_title}\n\n(Most relevant section)"
+
+        referenced_chunks.append({"content": mini_chunk, "source": source})
+
+    return referenced_chunks
 
 
-def search_similar_chunks(query, index, embeddings, embedding_model, chunks, k=3):
+# Search for similar chunks
+def search_similar_chunks(query, index, embeddings, embedding_model, chunks, k=2):
     # Create query embedding
     query_vector = embedding_model.encode([query]).astype("float32")
     faiss.normalize_L2(query_vector)
 
+    # Detect if this is likely a list-type question
+    list_keywords = ["list", "all", "what are", "medications", "medicines", "drugs"]
+    is_list_question = any(keyword in query.lower() for keyword in list_keywords)
+
+    # For list-type questions, increase k to get more comprehensive results
+    if is_list_question:
+        k = max(k, 4)  # Get at least 4 chunks for list questions
+
     # Search for similar chunks
     D, I = index.search(query_vector, k)
 
-    # Get the content from the most relevant chunks
-    relevant_chunks = [chunks[i]["content"] for i in I[0]]
-    return relevant_chunks
+    # For list questions about a specific topic, try to find all related chunks
+    if is_list_question:
+        # Get the topic from the most relevant chunk
+        most_relevant_source = chunks[I[0][0]]["source"]
+        topic = (
+            most_relevant_source.split(".")[0]
+            if "." in most_relevant_source
+            else most_relevant_source
+        )
+
+        # Find all chunks related to this topic
+        related_indices = [
+            i
+            for i, chunk in enumerate(chunks)
+            if topic.lower() in chunk["source"].lower()
+        ]
+
+        # Combine the vector-retrieved indices with topic-related indices
+        all_indices = list(I[0]) + [idx for idx in related_indices if idx not in I[0]]
+
+        # Limit to a reasonable number
+        all_indices = all_indices[:6]
+
+        # Return content from all these chunks
+        return [chunks[i]["content"] for i in all_indices]
+
+    # For regular questions, just return the vector-retrieved chunks
+    return [chunks[i]["content"] for i in I[0]]
+
+
+# Add a fallback response generator using the T5 model
+def generate_fallback_response(query, context):
+    tokenizer = T5Tokenizer.from_pretrained("google/flan-t5-small")
+    model = T5ForConditionalGeneration.from_pretrained("google/flan-t5-small")
+
+    input_text = (
+        f"Answer this question based on the context: {query}\n\nContext: {context}"
+    )
+    input_ids = tokenizer(
+        input_text, return_tensors="pt", max_length=512, truncation=True
+    ).input_ids
+    outputs = model.generate(
+        input_ids, max_length=100, min_length=10, num_beams=1, early_stopping=True
+    )
+    return tokenizer.decode(outputs[0], skip_special_tokens=True)
+
+
+# Replace OpenAI client with HuggingFace client
+@st.cache_resource
+def get_inference_client():
+    token = os.environ.get("HF_TOKEN")
+    if not token:
+        st.warning("⚠️ HuggingFace token not found. Using fallback model.")
+        return None
+    return InferenceClient(token=token)
+
+
+def generate_response(client, query, context):
+    try:
+        # Create a more structured prompt that clearly defines the task
+        prompt = f"""You are a medical assistant answering a single question about a patient based on their medical records.
+
+Context from patient records:
+{context}
+
+Question: {query}
+
+Provide a direct, concise answer to this specific question only. Do not generate additional questions or answers.
+
+Answer:"""
+
+        response = client.text_generation(
+            prompt,
+            model="HuggingFaceH4/zephyr-7b-beta",
+            max_new_tokens=500,
+            temperature=0.1,  # Lower temperature for more focused responses
+            do_sample=True,
+            top_p=0.95,
+            stop_sequences=[
+                "Question:",
+                "\n\n",
+            ],  # Stop if it tries to generate a new question
+        )
+
+        # Clean up the response to remove any hallucinated Q&A pairs
+        cleaned_response = response.split("Question:")[0].strip()
+        cleaned_response = cleaned_response.split("\n\n")[0].strip()
+
+        return cleaned_response
+    except Exception as e:
+        return f"Error generating response: {str(e)}"
 
 
 # Main application
@@ -218,14 +379,19 @@ patient_data = load_patient_data()
 chunks = process_patient_data(patient_data)
 embedding_model = load_embedding_model()
 embeddings = generate_embeddings(chunks, embedding_model)
-index = create_faiss_index(embeddings)  # Create FAISS index
-qa_model = load_qa_model()
+index = create_faiss_index(embeddings)
+inference_client = get_inference_client()
 
 # Display patient overview
 st.sidebar.header("Patient Overview")
-st.sidebar.write(f"**Name:** {patient_data['patient']['name']}")
+st.sidebar.write(f"**ID:** {patient_data['patient']['id']}")
 st.sidebar.write(f"**DOB:** {patient_data['patient']['dob']}")
 st.sidebar.write(f"**NHS Number:** {patient_data['patient']['nhs_number']}")
+st.sidebar.write(f"**Phone:** {patient_data['patient']['contact']['phone']}")
+st.sidebar.write(f"**Address:** {patient_data['patient']['contact']['address']}")
+st.sidebar.write(
+    f"**GP:** {patient_data['patient']['gp']['name']}, {patient_data['patient']['gp']['practice']}"
+)
 
 # Add sidebar navigation links
 st.sidebar.header("Navigation")
@@ -260,7 +426,7 @@ for message in st.session_state.messages:
                 st.text(message["references"])
 
 # Chat input
-if query := st.chat_input("Ask a question about the JSON data"):
+if query := st.chat_input("Ask a question about the patient"):
     # Display user message
     with st.chat_message("user"):
         st.write(query)
@@ -272,27 +438,58 @@ if query := st.chat_input("Ask a question about the JSON data"):
     with st.chat_message("assistant"):
         with st.spinner("Searching and generating answer..."):
             try:
-                # Find relevant chunks
+                # Search for similar chunks
                 relevant_chunks = search_similar_chunks(
                     query, index, embeddings, embedding_model, chunks
                 )
-
+                print(relevant_chunks)
                 # Create context from relevant chunks
-                context = "\n".join(relevant_chunks)
+                context = "\n\n".join(relevant_chunks)
 
-                # Generate answer
-                answer = generate_response(qa_model, query, context)
+                # Generate answer using OpenAI if client is available, otherwise use fallback
+                if inference_client:
+                    try:
+                        answer = generate_response(inference_client, query, context)
+                    except Exception as e:
+                        st.warning(f"API error: {str(e)}. Using fallback model.")
+                        answer = generate_fallback_response(query, context)
+                else:
+                    answer = generate_fallback_response(query, context)
+
+                # Find which chunks were actually referenced in the answer
+                referenced_chunks = find_referenced_chunks(
+                    answer, chunks, relevant_chunks
+                )
 
                 # Display answer
                 st.write(answer)
 
-                # Display references in expandable section
+                # Display only the referenced chunks
                 with st.expander("References"):
-                    st.text(context)
+                    if referenced_chunks:
+                        for chunk in referenced_chunks:
+                            st.markdown(f"**Source: {chunk['source']}**")
+                            st.markdown(
+                                chunk["content"]
+                            )  # Use markdown to render the formatted chunk
+                            st.markdown("---")
+                    else:
+                        st.write("No specific references found for this answer.")
 
-                # Add assistant response to chat history
+                # Add assistant response to chat history with only referenced chunks
+                references = "\n\n".join(
+                    [
+                        f"Source: {chunk['source']}\n{chunk['content']}"
+                        for chunk in referenced_chunks
+                    ]
+                )
+
                 st.session_state.messages.append(
-                    {"role": "assistant", "content": answer, "references": context}
+                    {
+                        "role": "assistant",
+                        "content": answer,
+                        "references": references,
+                    }
                 )
 
             except Exception as e:

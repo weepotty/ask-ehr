@@ -6,135 +6,159 @@
     "contact": {
       "address": "15 Oakwood Lane, Manchester, M14 5AA",
       "phone": "0161 123 4567"
+    }
+  },
+  "gp": {
+    "name": "Dr. Sarah Johnson",
+    "practice": "Oakwood Medical Practice",
+    "address": "10 Maple Road, Manchester, M20 3XY",
+    "phone": "0161 765 4321"
+  },
+  "diagnoses": [
+    {
+      "icd_10_code": "G40.2",
+      "condition": "Temporal Lobe Epilepsy",
+      "date_diagnosed": "2004-06-10"
     },
-    "gp": {
-      "name": "Dr. Sarah Johnson",
-      "practice": "Oakwood Medical Practice",
-      "address": "10 Maple Road, Manchester, M20 3XY",
-      "phone": "0161 765 4321"
+    {
+      "icd_10_code": "I10",
+      "condition": "Hypertension",
+      "date_diagnosed": "2015-08-20"
+    }
+  ],
+  "medications": [
+    {
+      "name": "Levetiracetam",
+      "dosage": "1000mg BD",
+      "start_date": "2017-06-01",
+      "end_date": "2020-01-01"
     },
-    "diagnoses": [
+    {
+      "name": "Sodium Valproate",
+      "dosage": "Unspecified",
+      "start_date": "2019-03-01",
+      "end_date": "2019-06-01"
+    },
+    {
+      "name": "Lamotrigine",
+      "dosage": "50mg BD",
+      "start_date": "2020-02-01"
+    },
+    {
+      "name": "Paracetamol",
+      "dosage": "PRN",
+      "start_date": "2015-06-10"
+    },
+    {
+      "name": "Atorvastatin",
+      "dosage": "40mg OD",
+      "start_date": "2018-09-22"
+    }
+  ],
+  "social_history": {
+    "living_situation": "Lives alone",
+    "family": {
+      "relation": "Daughter",
+      "details": "Lives away from home"
+    },
+    "smoking_status": "Non-smoker",
+    "alcohol_consumption": "None",
+    "occupation": "Train driver"
+  },
+  "results": {
+    "blood_tests": [
       {
-        "icd_10_code": "G40.2",
-        "condition": "Temporal Lobe Epilepsy",
-        "date_diagnosed": "2004-06-10"
+        "date_requested": "2024-03-10",
+        "tests": [
+          {
+            "test": "Haemoglobin",
+            "value": "14.2 g/dL",
+            "reference_range": "13.5-17.5 g/dL"
+          },
+          {
+            "test": "White Blood Cell Count",
+            "value": "6.8 x10^9/L",
+            "reference_range": "4.0-11.0 x10^9/L"
+          },
+          {
+            "test": "Platelets",
+            "value": "250 x10^9/L",
+            "reference_range": "150-400 x10^9/L"
+          }
+        ]
       },
       {
-        "icd_10_code": "I10",
-        "condition": "Hypertension",
-        "date_diagnosed": "2015-08-20"
+        "date_requested": "2023-09-20",
+        "tests": [
+          {
+            "test": "Sodium",
+            "value": "140 mmol/L",
+            "reference_range": "135-145 mmol/L"
+          },
+          {
+            "test": "Potassium",
+            "value": "4.2 mmol/L",
+            "reference_range": "3.5-5.1 mmol/L"
+          },
+          {
+            "test": "Creatinine",
+            "value": "85 µmol/L",
+            "reference_range": "60-110 µmol/L"
+          }
+        ]
       }
     ],
-    "medications": [
+    "imaging_tests": [
       {
-        "name": "Levetiracetam",
-        "dosage": "1000mg BD",
-        "start_date": "2017-06-01",
-        "end_date": "2020-01-01"
+        "date": "2023-11-15",
+        "test": "Echocardiogram",
+        "findings": "Normal left ventricular function, no valvular abnormalities."
       },
       {
-        "name": "Sodium Valproate",
-        "dosage": "Unspecified",
-        "start_date": "2019-03-01",
-        "end_date": "2019-06-01"
+        "date": "2022-09-30",
+        "test": "MRI Brain",
+        "findings": "Mild right temporal atrophy, no acute pathology."
+      }
+    ]
+  },
+  "admissions": [
+    {
+      "admission_date": "2024-04-05",
+      "discharge_date": "2024-04-06",
+      "reason": "Seizure episode",
+      "consultant": "Dr. Sarah Evans",
+      "specialty": "Emergency Medicine"
+    }
+  ],
+  "examination": {
+    "general": "Normal",
+    "neurological": "Normal"
+  },
+  "records": {
+    "appointments": [
+      {
+        "date": "2024-03-20",
+        "type": "Neurology Follow-up",
+        "consultant": "Dr. Michael Harris",
+        "specialty": "Neurology",
+        "notes": "Patient seen for routine neurology follow-up after recent seizure episode. Reports continued adherence to Lamotrigine with no adverse effects. No further seizures. Examination today revealed no new neurological deficits. Discussed importance of medication adherence, lifestyle modifications, and seizure triggers. Plan: Continue Lamotrigine, review in 6 months, and arrange blood tests prior to next visit."
       },
       {
-        "name": "Lamotrigine",
-        "dosage": "50mg BD",
-        "start_date": "2020-02-01"
-      },
-      {
-        "name": "Paracetamol",
-        "dosage": "PRN",
-        "start_date": "2015-06-10"
-      },
-      {
-        "name": "Atorvastatin",
-        "dosage": "40mg OD",
-        "start_date": "2018-09-22"
+        "date": "2023-12-05",
+        "type": "Cardiology Consultation",
+        "consultant": "Dr. Laura Patel",
+        "specialty": "Cardiology",
+        "notes": "Follow-up for hypertension. Reports occasional dizziness but denies chest pain, dyspnoea, or palpitations. BP stable at 138/85 mmHg. ECG showed normal sinus rhythm. Discussed salt intake reduction and lifestyle modifications. Plan: Continue current medication, review in 12 months."
       }
     ],
-    "social_history": {
-      "living_situation": "Lives alone",
-      "family": {
-        "relation": "Daughter",
-        "details": "Lives away from home"
-      },
-      "smoking_status": "Non-smoker",
-      "alcohol_consumption": "None",
-      "occupation": "Train driver"
-    },
-    "results": {
-      "blood_tests": [
-        {
-          "date_requested": "2024-03-10",
-          "tests": [
-            {"test": "Haemoglobin", "value": "14.2 g/dL", "reference_range": "13.5-17.5 g/dL"},
-            {"test": "White Blood Cell Count", "value": "6.8 x10^9/L", "reference_range": "4.0-11.0 x10^9/L"},
-            {"test": "Platelets", "value": "250 x10^9/L", "reference_range": "150-400 x10^9/L"}
-          ]
-        },
-        {
-          "date_requested": "2023-09-20",
-          "tests": [
-            {"test": "Sodium", "value": "140 mmol/L", "reference_range": "135-145 mmol/L"},
-            {"test": "Potassium", "value": "4.2 mmol/L", "reference_range": "3.5-5.1 mmol/L"},
-            {"test": "Creatinine", "value": "85 µmol/L", "reference_range": "60-110 µmol/L"}
-          ]
-        }
-      ],
-      "imaging_tests": [
-        {
-          "date": "2023-11-15",
-          "test": "Echocardiogram",
-          "findings": "Normal left ventricular function, no valvular abnormalities."
-        },
-        {
-          "date": "2022-09-30",
-          "test": "MRI Brain",
-          "findings": "Mild right temporal atrophy, no acute pathology."
-        }
-      ]
-    },
-    "admissions": [
+    "discharge_summaries": [
       {
-        "admission_date": "2024-04-05",
-        "discharge_date": "2024-04-06",
+        "date": "2024-04-06",
         "reason": "Seizure episode",
         "consultant": "Dr. Sarah Evans",
-        "specialty": "Emergency Medicine"
+        "specialty": "Emergency Medicine",
+        "notes": "Patient presented to A&E following a witnessed tonic-clonic seizure lasting approximately 2 minutes. No preceding aura, no head trauma. Post-ictal confusion lasting 20 minutes. Examination unremarkable. Blood tests including FBC, U+E, and drug levels within expected range. Discharged with safety advice, advised to continue Lamotrigine, and follow-up arranged with neurology."
       }
-    ],
-    "examination": {
-      "general": "Normal",
-      "neurological": "Normal"
-    },
-    "records": {
-      "appointments": [
-        {
-          "date": "2024-03-20",
-          "type": "Neurology Follow-up",
-          "consultant": "Dr. Michael Harris",
-          "specialty": "Neurology",
-          "notes": "Patient seen for routine neurology follow-up after recent seizure episode. Reports continued adherence to Lamotrigine with no adverse effects. No further seizures. Examination today revealed no new neurological deficits. Discussed importance of medication adherence, lifestyle modifications, and seizure triggers. Plan: Continue Lamotrigine, review in 6 months, and arrange blood tests prior to next visit."
-        },
-        {
-          "date": "2023-12-05",
-          "type": "Cardiology Consultation",
-          "consultant": "Dr. Laura Patel",
-          "specialty": "Cardiology",
-          "notes": "Follow-up for hypertension. Reports occasional dizziness but denies chest pain, dyspnoea, or palpitations. BP stable at 138/85 mmHg. ECG showed normal sinus rhythm. Discussed salt intake reduction and lifestyle modifications. Plan: Continue current medication, review in 12 months."
-        }
-      ],
-      "discharge_summaries": [
-        {
-          "date": "2024-04-06",
-          "reason": "Seizure episode",
-          "consultant": "Dr. Sarah Evans",
-          "specialty": "Emergency Medicine",
-          "notes": "Patient presented to A&E following a witnessed tonic-clonic seizure lasting approximately 2 minutes. No preceding aura, no head trauma. Post-ictal confusion lasting 20 minutes. Examination unremarkable. Blood tests including FBC, U+E, and drug levels within expected range. Discharged with safety advice, advised to continue Lamotrigine, and follow-up arranged with neurology."
-        }
     ]
-    }
-}
+  }
 }
