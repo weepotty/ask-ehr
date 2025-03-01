@@ -18,26 +18,37 @@ if "qa_history" not in st.session_state:
 # Load the patient data
 @st.cache_data
 def load_patient_data():
-    with open("patient.json", "r") as f:
+    with open("data/example.json", "r") as f:
         return json.load(f)
 
 
 # Process and chunk the patient data
 @st.cache_data
-def process_patient_data(patient_data):
+def process_patient_data(data):
     chunks = []
+    patient_data = data["patient"]
 
     # Process basic information
     basic_info = f"Patient name: {patient_data['name']}\n"
-    basic_info += f"Date of birth: {patient_data['date_of_birth']}\n"
-    basic_info += f"Gender: {patient_data['gender']}\n"
+    basic_info += f"Date of birth: {patient_data['dob']}\n"
+    basic_info += f"NHS Number: {patient_data['nhs_number']}\n"
+    basic_info += f"Address: {patient_data['address']}\n"
+    basic_info += f"Phone: {patient_data['phone']}\n"
     chunks.append({"content": basic_info, "source": "Basic Information"})
 
-    # Process contact information
-    contact_info = "Contact Information:\n"
-    for key, value in patient_data["contact_information"].items():
-        contact_info += f"{key}: {value}\n"
-    chunks.append({"content": contact_info, "source": "Contact Information"})
+    # Process GP information
+    gp_info = "GP Information:\n"
+    gp_info += f"Name: {patient_data['gp']['name']}\n"
+    gp_info += f"Practice: {patient_data['gp']['practice']}\n"
+    gp_info += f"Address: {patient_data['gp']['address']}\n"
+    gp_info += f"Phone: {patient_data['gp']['phone']}\n"
+    chunks.append({"content": gp_info, "source": "GP Information"})
+
+    # Process diagnoses
+    diagnoses_info = "Diagnoses:\n"
+    for diagnosis in patient_data["diagnoses"]:
+        diagnoses_info += f"- {diagnosis['condition']} (ICD-10: {diagnosis['icd_10_code']}), diagnosed on {diagnosis['date_diagnosed']}\n"
+    chunks.append({"content": diagnoses_info, "source": "Diagnoses"})
 
     # Process allergies
     allergies_info = "Allergies:\n"
@@ -45,58 +56,100 @@ def process_patient_data(patient_data):
         allergies_info += f"- {allergy['substance']}: {allergy['reaction']} (Severity: {allergy['severity']})\n"
     chunks.append({"content": allergies_info, "source": "Allergies"})
 
-    # Process medical history
-    for condition in patient_data["past_medical_history"]:
-        condition_info = f"Medical Condition: {condition['condition']}\n"
-        condition_info += f"Diagnosis date: {condition['diagnosis_date']}\n"
-        condition_info += f"Status: {condition['status']}\n"
-        condition_info += f"Medications: {', '.join(condition['medications'])}\n"
+    # Process medications
+    medications_info = "Medications:\n"
+    for medication in patient_data["medications"]:
+        end_date = medication["end_date"] if medication["end_date"] else "ongoing"
+        medications_info += f"- {medication['name']} {medication['dosage']} {medication['unit']} {medication['frequency']}, "
+        medications_info += f"started {medication['start_date']}, {end_date}\n"
+    chunks.append({"content": medications_info, "source": "Medications"})
+
+    # Process seizure history
+    seizure_info = "Seizure History:\n"
+    for seizure in patient_data["seizure_history"]:
+        seizure_info += f"- {seizure['date']}: {seizure['description']}\n"
+    chunks.append({"content": seizure_info, "source": "Seizure History"})
+
+    # Process social history
+    social_info = "Social History:\n"
+    social_info += f"Occupation: {patient_data['social_history']['occupation']}\n"
+    social_info += (
+        f"Smoking Status: {patient_data['social_history']['smoking_status']}\n"
+    )
+    social_info += f"Alcohol Consumption: {patient_data['social_history']['alcohol_consumption']}\n"
+    social_info += (
+        f"Living Situation: {patient_data['social_history']['living_situation']}\n"
+    )
+    chunks.append({"content": social_info, "source": "Social History"})
+
+    # Process appointments
+    for appointment in patient_data["appointments"]:
+        appointment_info = f"Appointment ({appointment['date']}):\n"
+        appointment_info += f"Type: {appointment['type']}\n"
+        appointment_info += f"Location: {appointment['location']}\n"
+        if "consultant" in appointment:
+            appointment_info += f"Consultant: {appointment['consultant']}\n"
+        elif "gp" in appointment:
+            appointment_info += f"GP: {appointment['gp']}\n"
+        appointment_info += f"Notes: {appointment['notes']}\n"
         chunks.append(
             {
-                "content": condition_info,
-                "source": f"Medical History - {condition['condition']}",
+                "content": appointment_info,
+                "source": f"Appointment - {appointment['date']} - {appointment['type']}",
             }
         )
 
-    # Process clinic letters
-    for letter in patient_data["clinic_letters"]:
-        letter_info = f"Clinic Letter ({letter['date']}):\n"
-        letter_info += f"Specialty: {letter['specialty']}\n"
-        letter_info += f"Consultant: {letter['consultant']}\n"
-        letter_info += f"Summary: {letter['summary']}\n"
-        chunks.append(
-            {"content": letter_info, "source": f"Clinic Letter - {letter['date']}"}
-        )
+    # Process discharge summary
+    discharge_info = (
+        f"Discharge Summary ({patient_data['discharge_summary']['date']}):\n"
+    )
+    discharge_info += f"Admitting Diagnosis: {patient_data['discharge_summary']['admitting_diagnosis']}\n"
+    discharge_info += f"Hospital: {patient_data['discharge_summary']['hospital']}\n"
+    discharge_info += (
+        f"Length of Stay: {patient_data['discharge_summary']['length_of_stay']}\n"
+    )
+    discharge_info += f"Summary: {patient_data['discharge_summary']['free_text']}\n"
+    chunks.append(
+        {
+            "content": discharge_info,
+            "source": f"Discharge Summary - {patient_data['discharge_summary']['date']}",
+        }
+    )
 
-    # Process discharge summaries
-    for summary in patient_data["discharge_summaries"]:
-        summary_info = f"Discharge Summary ({summary['date']}):\n"
-        summary_info += f"Hospital: {summary['hospital']}\n"
-        summary_info += f"Reason for admission: {summary['reason_for_admission']}\n"
-        summary_info += f"Summary: {summary['summary']}\n"
+    # Process test results
+    for test in patient_data["test_results"]:
+        test_info = f"Test Result ({test['date']}):\n"
+        test_info += f"Test: {test['test']}\n"
+        test_info += f"Location: {test['location']}\n"
+        if "findings" in test:
+            test_info += f"Findings: {test['findings']}\n"
+        elif "results" in test:
+            test_info += "Results:\n"
+            for result_name, result_data in test["results"].items():
+                test_info += (
+                    f"- {result_name}: {result_data['value']} {result_data['unit']} "
+                )
+                test_info += f"(Normal range: {result_data['normal_range']})\n"
         chunks.append(
             {
-                "content": summary_info,
-                "source": f"Discharge Summary - {summary['date']}",
+                "content": test_info,
+                "source": f"Test Result - {test['date']} - {test['test']}",
             }
         )
 
-    # Process lab results
-    for lab in patient_data["labs"]:
-        lab_info = f"Lab Test ({lab['date']}):\n"
-        lab_info += f"Test: {lab['test']}\n"
-        if "result" in lab:
-            lab_info += f"Result: {lab['result']}\n"
-        elif "results" in lab:
-            lab_info += "Results:\n"
-            for test, result in lab["results"].items():
-                lab_info += f"- {test}: {result}\n"
-        lab_info += f"Reference range: {lab['reference_range']}\n"
-        lab_info += f"Interpretation: {lab['interpretation']}\n"
+    # Process theatre visits
+    for visit in patient_data["theatre_visits"]:
+        visit_info = f"Theatre Visit ({visit['date']}):\n"
+        visit_info += f"Specialty: {visit['specialty']}\n"
+        visit_info += (
+            f"Procedure: {visit['procedure']} (Code: {visit['procedure_code']})\n"
+        )
+        visit_info += f"Admission ID: {visit['admission_id']}\n"
+        visit_info += f"Procedure Time: {visit['procedure_start_time']} to {visit['procedure_end_time']}\n"
         chunks.append(
             {
-                "content": lab_info,
-                "source": f"Lab Results - {lab['date']} - {lab['test']}",
+                "content": visit_info,
+                "source": f"Theatre Visit - {visit['date']} - {visit['procedure']}",
             }
         )
 
@@ -131,9 +184,9 @@ qa_model = load_qa_model()
 
 # Display patient overview
 st.sidebar.header("Patient Overview")
-st.sidebar.write(f"**Name:** {patient_data['name']}")
-st.sidebar.write(f"**DOB:** {patient_data['date_of_birth']}")
-st.sidebar.write(f"**Gender:** {patient_data['gender']}")
+st.sidebar.write(f"**Name:** {patient_data['patient']['name']}")
+st.sidebar.write(f"**DOB:** {patient_data['patient']['dob']}")
+st.sidebar.write(f"**NHS Number:** {patient_data['patient']['nhs_number']}")
 
 # Add sidebar navigation links
 st.sidebar.header("Navigation")
