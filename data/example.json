@@ -1,203 +1,164 @@
 {
-    "patient": {
-      "name": "Johnathan Smith",
-      "dob": "1965-03-12",
-      "nhs_number": "123 456 7890",
-      "address": "42 Greenway Road, London, SW1A 1AA",
-      "phone": "0207 123 4567",
-      "gp": {
-        "name": "Dr. Emily Carter",
-        "practice": "Greenway Medical Centre",
-        "address": "10 High Street, London, SW1A 2BB",
-        "phone": "0207 987 6543"
+  "patient": {
+    "id": "P123456789",
+    "dob": "1975-04-22",
+    "nhs_number": "987 654 3210",
+    "contact": {
+      "address": "15 Oakwood Lane, Manchester, M14 5AA",
+      "phone": "0161 123 4567"
+    },
+    "gp": {
+      "name": "Dr. Sarah Johnson",
+      "practice": "Oakwood Medical Practice",
+      "address": "10 Maple Road, Manchester, M20 3XY",
+      "phone": "0161 765 4321"
+    },
+    "diagnoses": [
+      {
+        "icd_10_code": "G40.2",
+        "condition": "Temporal Lobe Epilepsy",
+        "date_diagnosed": "2004-06-10"
       },
-      "diagnoses": [
-        {"icd_10_code": "G40.2", "condition": "Temporal Lobe Epilepsy", "date_diagnosed": "2010-06-15"},
-        {"icd_10_code": "I63.9", "condition": "Ischaemic Stroke, unspecified", "date_diagnosed": "2018-07-22"},
-        {"icd_10_code": "I10", "condition": "Hypertension", "date_diagnosed": "2015-02-10"},
-        {"icd_10_code": "M19.9", "condition": "Osteoarthritis, unspecified site", "date_diagnosed": "2020-09-05"},
-        {"icd_10_code": "F32.9", "condition": "Depression, unspecified", "date_diagnosed": "2019-02-01"}
-      ],
-      "allergies": [
-        {"substance": "Penicillin", "reaction": "Rash", "severity": "Mild"},
-        {"substance": "Ibuprofen", "reaction": "Anaphylaxis", "severity": "Severe"},
-        {"substance": "Latex", "reaction": "Rash", "severity": "Moderate"}
-      ],
-      "medications": [
-        {"name": "Lamotrigine", "dosage": 50, "unit": "mg", "frequency": "BD", "start_date": "2019-03-01", "end_date": null},
-        {"name": "Codeine", "dosage": 30, "unit": "mg", "frequency": "QDS", "start_date": "2020-07-10", "end_date": null},
-        {"name": "Atorvastatin", "dosage": 40, "unit": "mg", "frequency": "OD", "start_date": "2018-08-01", "end_date": null},
-        {"name": "Clopidogrel", "dosage": 75, "unit": "mg", "frequency": "OD", "start_date": "2018-08-01", "end_date": null},
-        {"name": "Sertraline", "dosage": 50, "unit": "mg", "frequency": "OD", "start_date": "2019-02-15", "end_date": null}
-      ],
-      "seizure_history": [
-        {"date": "2009-11-02", "description": "First documented seizure, no known triggers."},
-        {"date": "2018-06-15", "description": "Seizure following sleep deprivation and alcohol consumption."},
-        {"date": "2024-12-10", "description": "Most recent seizure, mild, self-limiting."}
-      ],
-      "social_history": {
-        "occupation": "Retired accountant",
-        "smoking_status": "Ex-smoker",
-        "alcohol_consumption": "2-4 units per week",
-        "living_situation": "Lives with wife, good support system"
+      {
+        "icd_10_code": "I10",
+        "condition": "Hypertension",
+        "date_diagnosed": "2015-08-20"
+      }
+    ],
+    "medications": [
+      {
+        "name": "Levetiracetam",
+        "dosage": "1000mg BD",
+        "start_date": "2017-06-01",
+        "end_date": "2020-01-01"
       },
+      {
+        "name": "Sodium Valproate",
+        "dosage": "Unspecified",
+        "start_date": "2019-03-01",
+        "end_date": "2019-06-01"
+      },
+      {
+        "name": "Lamotrigine",
+        "dosage": "50mg BD",
+        "start_date": "2020-02-01"
+      },
+      {
+        "name": "Paracetamol",
+        "dosage": "PRN",
+        "start_date": "2015-06-10"
+      },
+      {
+        "name": "Atorvastatin",
+        "dosage": "40mg OD",
+        "start_date": "2018-09-22"
+      }
+    ],
+    "social_history": {
+      "living_situation": "Lives alone",
+      "family": {
+        "relation": "Daughter",
+        "details": "Lives away from home"
+      },
+      "smoking_status": "Non-smoker",
+      "alcohol_consumption": "None",
+      "occupation": "Train driver"
+    },
+    "results": {
+      "blood_tests": [
+        {
+          "date_requested": "2024-03-10",
+          "tests": [
+            {
+              "test": "Haemoglobin",
+              "value": "14.2 g/dL",
+              "reference_range": "13.5-17.5 g/dL"
+            },
+            {
+              "test": "White Blood Cell Count",
+              "value": "6.8 x10^9/L",
+              "reference_range": "4.0-11.0 x10^9/L"
+            },
+            {
+              "test": "Platelets",
+              "value": "250 x10^9/L",
+              "reference_range": "150-400 x10^9/L"
+            }
+          ]
+        },
+        {
+          "date_requested": "2023-09-20",
+          "tests": [
+            {
+              "test": "Sodium",
+              "value": "140 mmol/L",
+              "reference_range": "135-145 mmol/L"
+            },
+            {
+              "test": "Potassium",
+              "value": "4.2 mmol/L",
+              "reference_range": "3.5-5.1 mmol/L"
+            },
+            {
+              "test": "Creatinine",
+              "value": "85 µmol/L",
+              "reference_range": "60-110 µmol/L"
+            }
+          ]
+        }
+      ],
+      "imaging_tests": [
+        {
+          "date": "2023-11-15",
+          "test": "Echocardiogram",
+          "findings": "Normal left ventricular function, no valvular abnormalities."
+        },
+        {
+          "date": "2022-09-30",
+          "test": "MRI Brain",
+          "findings": "Mild right temporal atrophy, no acute pathology."
+        }
+      ]
+    },
+    "admissions": [
+      {
+        "admission_date": "2024-04-05",
+        "discharge_date": "2024-04-06",
+        "reason": "Seizure episode",
+        "consultant": "Dr. Sarah Evans",
+        "specialty": "Emergency Medicine"
+      }
+    ],
+    "examination": {
+      "general": "Normal",
+      "neurological": "Normal"
+    },
+    "records": {
       "appointments": [
         {
-          "date": "2024-01-15",
+          "date": "2024-03-20",
           "type": "Neurology Follow-up",
-          "location": "St. Mary's Hospital, Neurology Clinic",
-          "consultant": "Dr. James Patel",
-          "notes": "Patient reports stable seizure control with Lamotrigine. Advised to continue medication. Discussed potential side effects. Next review in 6 months. History also notes depressive symptoms in 2019, thought to be exacerbated by previous Levetiracetam use. MRI from 2010 showed right temporal sclerosis. The patient's father had hypertension and passed away at age 68, while his mother is living with Type 2 Diabetes."
+          "consultant": "Dr. Michael Harris",
+          "specialty": "Neurology",
+          "notes": "Patient seen for routine neurology follow-up after recent seizure episode. Reports continued adherence to Lamotrigine with no adverse effects. No further seizures. Examination today revealed no new neurological deficits. Discussed importance of medication adherence, lifestyle modifications, and seizure triggers. Plan: Continue Lamotrigine, review in 6 months, and arrange blood tests prior to next visit."
         },
         {
-          "date": "2023-06-05",
-          "type": "GP Medication Review",
-          "location": "Greenway Medical Centre",
-          "gp": "Dr. Emily Carter",
-          "notes": "No side effects reported. BP well-controlled. Continue current regimen. Routine bloods taken. Patient also mentioned persistent knee pain interfering with daily activities, likely due to osteoarthritis. His brother has coronary artery disease at 57 years old."
-        },
-        {
-          "date": "2022-10-03",
-          "type": "Cardiology Consult",
-          "location": "Greenway Medical Centre",
-          "consultant": "Dr. Sarah Wells",
-          "notes": "Patient referred for hypertension and family history of heart disease. BP elevated but stable on current medication regimen. ECG normal. Advised to monitor and return in 6 months."
-        },
-        {
-          "date": "2021-05-10",
-          "type": "Dermatology Consultation",
-          "location": "St. Mary's Hospital, Dermatology",
-          "consultant": "Dr. Olivia Turner",
-          "notes": "Patient with long-standing mole on back. Biopsy performed, benign nevus confirmed."
+          "date": "2023-12-05",
+          "type": "Cardiology Consultation",
+          "consultant": "Dr. Laura Patel",
+          "specialty": "Cardiology",
+          "notes": "Follow-up for hypertension. Reports occasional dizziness but denies chest pain, dyspnoea, or palpitations. BP stable at 138/85 mmHg. ECG showed normal sinus rhythm. Discussed salt intake reduction and lifestyle modifications. Plan: Continue current medication, review in 12 months."
         }
       ],
-      "discharge_summary": {
-        "date": "2019-02-28",
-        "admitting_diagnosis": "Depression with suicidal ideation (no ICD-10 code assigned)",
-        "hospital": "St. Mary's Hospital, Psychiatry Ward",
-        "length_of_stay": "14 days",
-        "free_text": "Neurology team reviewed patient due to history of epilepsy. They identified Levetiracetam as a potential contributing factor to the worsening depressive symptoms. The medication was discontinued, and the patient was transitioned to Lamotrigine. No breakthrough seizures occurred during admission. The patient also presented with mild depression (not formally diagnosed) and knee pain, which was thought to be osteoarthritis. His family history includes hypertension in his father (deceased at age 68) and Type 2 Diabetes in his mother, who is 75 years old. His brother, aged 57, has coronary artery disease."
-      },
-      "test_results": [
+      "discharge_summaries": [
         {
-          "test": "MRI Brain",
-          "date": "2010-07-01",
-          "location": "St. Mary's Hospital, Radiology",
-          "findings": "Right temporal sclerosis consistent with epilepsy. No other significant abnormalities."
-        },
-        {
-          "test": "EEG",
-          "date": "2010-07-15",
-          "location": "St. Mary's Hospital, Neurology",
-          "findings": "Epileptiform activity in right temporal lobe."
-        },
-        {
-          "test": "Full Blood Count (FBC)",
-          "date": "2024-02-10",
-          "location": "Greenway Medical Centre, Laboratory",
-          "results": {
-            "haemoglobin": {
-              "value": 13.8,
-              "unit": "g/dL",
-              "normal_range": "13.5-17.5"
-            },
-            "white_blood_cells": {
-              "value": 6.4,
-              "unit": "10^9/L",
-              "normal_range": "4.0-11.0"
-            },
-            "platelets": {
-              "value": 230,
-              "unit": "10^9/L",
-              "normal_range": "150-400"
-            }
-          }
-        },
-        {
-          "test": "Liver Function Test (LFT)",
-          "date": "2024-02-10",
-          "location": "Greenway Medical Centre, Laboratory",
-          "results": {
-            "ALT": {
-              "value": 22,
-              "unit": "U/L",
-              "normal_range": "10-40"
-            },
-            "AST": {
-              "value": 18,
-              "unit": "U/L",
-              "normal_range": "10-40"
-            },
-            "bilirubin": {
-              "value": 10,
-              "unit": "µmol/L",
-              "normal_range": "5-25"
-            }
-          }
-        },
-        {
-          "test": "Thyroid Function Test (TFT)",
-          "date": "2024-02-10",
-          "location": "Greenway Medical Centre, Laboratory",
-          "results": {
-            "TSH": {
-              "value": 2.2,
-              "unit": "mU/L",
-              "normal_range": "0.4-4.0"
-            },
-            "t3": {
-              "value": 1.2,
-              "unit": "nmol/L",
-              "normal_range": "1.0-3.0"
-            },
-            "t4": {
-              "value": 17.0,
-              "unit": "pmol/L",
-              "normal_range": "10.0-20.0"
-            }
-          }
-        }
-      ],
-      "theatre_visits": [
-        {
-          "theatre_visit_id": "TV123456",
-          "date": "2022-01-15",
-          "specialty": "Orthopaedics",
-          "procedure": "Knee Arthroscopy",
-          "procedure_code": "OPCS-3: E847",
-          "admission_id": "A123456",
-          "knife_to_skin_time": "2022-01-15T09:15:00",
-          "procedure_start_time": "2022-01-15T09:30:00",
-          "procedure_end_time": "2022-01-15T10:00:00",
-          "other_timestamps": {
-            "anaesthesia_start_time": "2022-01-15T09:00:00",
-            "anaesthesia_end_time": "2022-01-15T09:15:00"
-          }
-        },
-        {
-          "theatre_visit_id": "TV789101",
-          "date": "2021-07-02",
-          "specialty": "General Surgery",
-          "procedure": "Cholecystectomy",
-          "procedure_code": "OPCS-3: D370",
-          "admission_id": "A789101",
-          "knife_to_skin_time": "2021-07-02T10:00:00",
-          "procedure_start_time": "2021-07-02T10:30:00",
-          "procedure_end_time": "2021-07-02T11:00:00",
-          "other_timestamps": {
-            "anaesthesia_start_time": "2021-07-02T09:45:00",
-            "anaesthesia_end_time": "2021-07-02T10:00:00"
-          }
+          "date": "2024-04-06",
+          "reason": "Seizure episode",
+          "consultant": "Dr. Sarah Evans",
+          "specialty": "Emergency Medicine",
+          "notes": "Patient presented to A&E following a witnessed tonic-clonic seizure lasting approximately 2 minutes. No preceding aura, no head trauma. Post-ictal confusion lasting 20 minutes. Examination unremarkable. Blood tests including FBC, U+E, and drug levels within expected range. Discharged with safety advice, advised to continue Lamotrigine, and follow-up arranged with neurology."
         }
       ]
     }
   }
-
-
-
-
-
-
-
-
-
+}
