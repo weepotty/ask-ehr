@@ -5,14 +5,15 @@ import streamlit as st
 from sentence_transformers import SentenceTransformer
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
+import faiss
 
 # Set up Streamlit page
 st.set_page_config(page_title="Patient Information QA System", layout="wide")
 st.title("Ask EHR")
 
 # Initialize chat history in session state if it doesn't exist
-if "qa_history" not in st.session_state:
-    st.session_state.qa_history = []
+if "messages" not in st.session_state:
+    st.session_state.messages = []
 
 
 # Load the patient data
@@ -175,11 +176,49 @@ def load_qa_model():
     return pipeline("question-answering", model="deepset/bert-base-cased-squad2")
 
 
+# After generating embeddings, create and initialize FAISS index
+@st.cache_resource
+def create_faiss_index(embeddings):
+    # Convert embeddings to float32 (required by FAISS)
+    embeddings = np.array(embeddings).astype("float32")
+
+    # Normalize the vectors
+    faiss.normalize_L2(embeddings)
+
+    # Create the index
+    dimension = embeddings.shape[1]
+    index = faiss.IndexFlatIP(dimension)  # Inner product index for cosine similarity
+
+    # Add vectors to the index
+    index.add(embeddings)
+    return index
+
+
+def generate_response(qa_model, query, context):
+    # Use the QA model to generate a response
+    result = qa_model(question=query, context=context)
+    return result["answer"]
+
+
+def search_similar_chunks(query, index, embeddings, embedding_model, chunks, k=3):
+    # Create query embedding
+    query_vector = embedding_model.encode([query]).astype("float32")
+    faiss.normalize_L2(query_vector)
+
+    # Search for similar chunks
+    D, I = index.search(query_vector, k)
+
+    # Get the content from the most relevant chunks
+    relevant_chunks = [chunks[i]["content"] for i in I[0]]
+    return relevant_chunks
+
+
 # Main application
 patient_data = load_patient_data()
 chunks = process_patient_data(patient_data)
 embedding_model = load_embedding_model()
 embeddings = generate_embeddings(chunks, embedding_model)
+index = create_faiss_index(embeddings)  # Create FAISS index
 qa_model = load_qa_model()
 
 # Display patient overview
@@ -207,154 +246,61 @@ if "selected_option" not in st.session_state:
 for option in sidebar_options:
     st.sidebar.button(option)
 
-
 # Add a button to clear chat history
 if st.sidebar.button("Clear Chat History"):
-    st.session_state.qa_history = []
+    st.session_state.messages = []
     st.rerun()
 
 # Display chat history
-st.header("Chat History")
-for i, qa_pair in enumerate(st.session_state.qa_history):
-    st.markdown(f"**Question {i+1}:** {qa_pair['question']}")
-    st.markdown(f"**Answer {i+1}:** {qa_pair['answer']}")
-    st.markdown("---")
+for message in st.session_state.messages:
+    with st.chat_message(message["role"]):
+        st.write(message["content"])
+        if "references" in message:
+            with st.expander("References"):
+                st.text(message["references"])
 
+# Chat input
+if query := st.chat_input("Ask a question about the JSON data"):
+    # Display user message
+    with st.chat_message("user"):
+        st.write(query)
 
-# Use a form to handle submission and clear the input
-with st.form(key="query_form"):
-    query = st.text_input("Your question:")
-    submit_button = st.form_submit_button("Submit")
+    # Add user message to chat history
+    st.session_state.messages.append({"role": "user", "content": query})
 
-
-# Add an improved function to post-process answers for different question types
-def process_answer(question, answer, context):
-    # Convert question to lowercase for easier matching
-    question_lower = question.lower()
-
-    # Check for different question types
-    if any(
-        keyword in question_lower
-        for keyword in ["medication", "medicine", "drug", "prescription"]
-    ):
-        if "Medications:" in context:
-            # Extract medication information
-            medications_section = context.split("Medications:")[1].split("\n\n")[0]
-            medication_lines = [
-                line.strip()
-                for line in medications_section.split("\n")
-                if line.strip().startswith("-")
-            ]
-            if medication_lines:
-                medications = [
-                    med.strip("- ").split(",")[0] for med in medication_lines
-                ]
-                return f"The patient is on the following medications: {', '.join(medications)}"
-
-    elif any(keyword in question_lower for keyword in ["allergy", "allergic"]):
-        if "Allergies:" in context:
-            # Extract allergy information
-            allergies_section = context.split("Allergies:")[1].split("\n\n")[0]
-            allergy_lines = [
-                line.strip()
-                for line in allergies_section.split("\n")
-                if line.strip().startswith("-")
-            ]
-            if allergy_lines:
-                allergies = [
-                    allergy.strip("- ").split(":")[0] for allergy in allergy_lines
-                ]
-                return (
-                    f"The patient has the following allergies: {', '.join(allergies)}"
+    # Generate response
+    with st.chat_message("assistant"):
+        with st.spinner("Searching and generating answer..."):
+            try:
+                # Find relevant chunks
+                relevant_chunks = search_similar_chunks(
+                    query, index, embeddings, embedding_model, chunks
                 )
 
-    elif any(
-        keyword in question_lower for keyword in ["diagnosis", "condition", "disease"]
-    ):
-        if "Diagnoses:" in context:
-            # Extract diagnosis information
-            diagnoses_section = context.split("Diagnoses:")[1].split("\n\n")[0]
-            diagnosis_lines = [
-                line.strip()
-                for line in diagnoses_section.split("\n")
-                if line.strip().startswith("-")
-            ]
-            if diagnosis_lines:
-                diagnoses = [
-                    diag.strip("- ").split(" (ICD")[0] for diag in diagnosis_lines
-                ]
-                return f"The patient has been diagnosed with: {', '.join(diagnoses)}"
+                # Create context from relevant chunks
+                context = "\n".join(relevant_chunks)
 
-    elif "test" in question_lower or "result" in question_lower:
-        # Try to find test results in the context
-        test_sections = []
-        if "Test Result" in context:
-            for section in context.split("Test Result"):
-                if section.strip():
-                    test_sections.append("Test Result" + section.split("\n\n")[0])
+                # Generate answer
+                answer = generate_response(qa_model, query, context)
 
-            if test_sections:
-                return f"The patient has the following test results:\n" + "\n".join(
-                    test_sections
+                # Display answer
+                st.write(answer)
+
+                # Display references in expandable section
+                with st.expander("References"):
+                    st.text(context)
+
+                # Add assistant response to chat history
+                st.session_state.messages.append(
+                    {"role": "assistant", "content": answer, "references": context}
                 )
 
-    # For other types of questions, try to improve the BERT answer
-    bert_answer = answer["answer"]
-
-    # If the answer is very short, try to find the sentence containing it for more context
-    if len(bert_answer.split()) < 3:
-        for sentence in context.split(". "):
-            if bert_answer in sentence:
-                return sentence + "."
-
-    return bert_answer
-
-
-# Process the query when the form is submitted
-if submit_button and query:
-    # Generate embedding for the query
-    query_embedding = embedding_model.encode([query])[0]
-
-    # Calculate similarity scores
-    similarity_scores = cosine_similarity([query_embedding], embeddings)[0]
-
-    # Get top 3 most relevant chunks
-    top_indices = np.argsort(similarity_scores)[-3:][::-1]
-
-    # Combine relevant contexts
-    context = "\n\n".join([chunks[i]["content"] for i in top_indices])
-
-    # Get answer from QA model
-    with st.spinner("Generating answer..."):
-        answer = qa_model(question=query, context=context)
-
-    # Process the answer for special cases
-    processed_answer = process_answer(query, answer, context)
-
-    # Add to chat history
-    st.session_state.qa_history.append(
-        {
-            "question": query,
-            "answer": processed_answer,  # Use the processed answer
-            "confidence": answer["score"],
-            "sources": [
-                {"source": chunks[i]["source"], "relevance": similarity_scores[i]}
-                for i in top_indices
-            ],
-        }
-    )
-
-    # Display answer
-    st.subheader("Answer")
-    st.write(processed_answer)  # Display the processed answer
-    st.write(f"Confidence: {answer['score']:.2%}")
-
-    # Display source information
-    st.subheader("Source Information")
-    for i in top_indices:
-        with st.expander(f"Source: {chunks[i]['source']}"):
-            st.write(chunks[i]["content"])
-            st.write(f"Relevance score: {similarity_scores[i]:.2%}")
+            except Exception as e:
+                error_msg = f"Error generating response: {str(e)}"
+                st.error(error_msg)
+                st.session_state.messages.append(
+                    {"role": "assistant", "content": error_msg}
+                )
 
 # Display all chunks for inspection
 with st.expander("View All Patient Data"):
