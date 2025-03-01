@@ -1,0 +1,84 @@
+{
+    "patient_id": "123456",
+    "name": "John Doe",
+    "date_of_birth": "1985-07-22",
+    "gender": "Male",
+    "contact_information": {
+        "phone": "+1-555-1234",
+        "email": "johndoe@example.com",
+        "address": "123 Main St, Springfield, USA"
+    },
+    "allergies": [
+        {
+            "substance": "Penicillin",
+            "reaction": "Rash and swelling",
+            "severity": "Moderate"
+        },
+        {
+            "substance": "Peanuts",
+            "reaction": "Anaphylaxis",
+            "severity": "Severe"
+        }
+    ],
+    "past_medical_history": [
+        {
+            "condition": "Hypertension",
+            "diagnosis_date": "2015-03-10",
+            "status": "Ongoing",
+            "medications": [
+                "Lisinopril 10mg daily"
+            ]
+        },
+        {
+            "condition": "Type 2 Diabetes",
+            "diagnosis_date": "2018-06-15",
+            "status": "Ongoing",
+            "medications": [
+                "Metformin 500mg BID"
+            ]
+        }
+    ],
+    "clinic_letters": [
+        {
+            "date": "2024-01-15",
+            "specialty": "Endocrinology",
+            "consultant": "Dr. Jane Smith",
+            "summary": "Patient seen for routine follow-up for diabetes management. HbA1c remains stable at 6.8%. Advised to continue current medications and lifestyle modifications."
+        },
+        {
+            "date": "2023-10-10",
+            "specialty": "Cardiology",
+            "consultant": "Dr. Mark Johnson",
+            "summary": "Patient presented with mild chest discomfort. ECG normal. Stress test negative for ischemia. Reassured and advised lifestyle changes."
+        }
+    ],
+    "discharge_summaries": [
+        {
+            "date": "2023-05-20",
+            "hospital": "Springfield General Hospital",
+            "reason_for_admission": "Diabetic Ketoacidosis (DKA)",
+            "summary": "Patient admitted with DKA secondary to non-compliance with insulin therapy. Treated with IV fluids, insulin drip, and electrolyte correction. Discharged on basal-bolus insulin regimen with diabetes education."
+        }
+    ],
+    "labs": [
+        {
+            "date": "2024-02-10",
+            "test": "HbA1c",
+            "result": "6.8%",
+            "reference_range": "4.0 - 5.7%",
+            "interpretation": "Elevated, but within acceptable range for diabetes control."
+        },
+        {
+            "date": "2024-02-10",
+            "test": "Lipid Panel",
+            "results": {
+                "Total Cholesterol": "180 mg/dL",
+                "LDL": "100 mg/dL",
+                "HDL": "50 mg/dL",
+                "Triglycerides": "120 mg/dL"
+            },
+            "reference_range": "Varies",
+            "interpretation": "Within goal for cardiovascular risk reduction."
+        }
+    ]
+}
