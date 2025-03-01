@@ -135,6 +135,26 @@ st.sidebar.write(f"**Name:** {patient_data['name']}")
 st.sidebar.write(f"**DOB:** {patient_data['date_of_birth']}")
 st.sidebar.write(f"**Gender:** {patient_data['gender']}")
 
+# Add sidebar navigation links
+st.sidebar.header("Navigation")
+sidebar_options = [
+    "Doctor's notes",
+    "Nurse's notes",
+    "Physiotherapy notes",
+    "Discharge summaries",
+    "Blood test results",
+    "Imaging reports",
+]
+
+# Initialize selected option in session state if it doesn't exist
+if "selected_option" not in st.session_state:
+    st.session_state.selected_option = None
+
+# Create clickable links for each option
+for option in sidebar_options:
+    st.sidebar.button(option)
+
+
 # Add a button to clear chat history
 if st.sidebar.button("Clear Chat History"):
     st.session_state.qa_history = []
@@ -197,7 +217,7 @@ if submit_button and query:
             st.write(f"Relevance score: {similarity_scores[i]:.2%}")
 
 # Display all chunks for inspection
-with st.expander("View All Patient Data Chunks"):
+with st.expander("View All Patient Data"):
     for i, chunk in enumerate(chunks):
         st.markdown(f"**Chunk {i+1}: {chunk['source']}**")
         st.text(chunk["content"])
