@@ -8,7 +8,11 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 # Set up Streamlit page
 st.set_page_config(page_title="Patient Information QA System", layout="wide")
-st.title("Patient Information Query System")
+st.title("Ask EHR")
+
+# Initialize chat history in session state if it doesn't exist
+if "qa_history" not in st.session_state:
+    st.session_state.qa_history = []
 
 
 # Load the patient data
@@ -131,11 +135,26 @@ st.sidebar.write(f"**Name:** {patient_data['name']}")
 st.sidebar.write(f"**DOB:** {patient_data['date_of_birth']}")
 st.sidebar.write(f"**Gender:** {patient_data['gender']}")
 
-# Query interface
-st.header("Ask a question about the patient")
-query = st.text_input("Your question:")
+# Add a button to clear chat history
+if st.sidebar.button("Clear Chat History"):
+    st.session_state.qa_history = []
+    st.rerun()
 
-if query:
+# Display chat history
+st.header("Chat History")
+for i, qa_pair in enumerate(st.session_state.qa_history):
+    st.markdown(f"**Question {i+1}:** {qa_pair['question']}")
+    st.markdown(f"**Answer {i+1}:** {qa_pair['answer']}")
+    st.markdown("---")
+
+
+# Use a form to handle submission and clear the input
+with st.form(key="query_form"):
+    query = st.text_input("Your question:")
+    submit_button = st.form_submit_button("Submit")
+
+# Process the query when the form is submitted
+if submit_button and query:
     # Generate embedding for the query
     query_embedding = embedding_model.encode([query])[0]
 
@@ -151,6 +170,19 @@ if query:
     # Get answer from QA model
     with st.spinner("Generating answer..."):
         answer = qa_model(question=query, context=context)
+
+    # Add to chat history
+    st.session_state.qa_history.append(
+        {
+            "question": query,
+            "answer": answer["answer"],
+            "confidence": answer["score"],
+            "sources": [
+                {"source": chunks[i]["source"], "relevance": similarity_scores[i]}
+                for i in top_indices
+            ],
+        }
+    )
 
     # Display answer
     st.subheader("Answer")
