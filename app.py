@@ -16,7 +16,6 @@ st.set_page_config(page_title="Ask EHR", layout="wide")
 col1, col2, col3 = st.columns([1, 1, 1])
 with col2:
     st.image("ask_logo.png", width=200)
-st.title("Ask EHR")
 
 
 # Initialize chat history in session state if it doesn't exist
@@ -440,9 +439,3 @@ if query := st.chat_input("Ask a question about the patient"):
                 st.session_state.messages.append(
                     {"role": "assistant", "content": error_msg}
                 )
-# Display all chunks for inspection
-with st.expander("View All Patient Data"):
-    for i, chunk in enumerate(chunks):
-        st.markdown(f"**Chunk {i+1}: {chunk['source']}**")
-        st.text(chunk["content"])
-        st.markdown("---")
