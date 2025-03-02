@@ -27,120 +27,102 @@ def load_patient_data():
         return json.load(f)
 
 
-# Process and chunk the patient data using a flattened JSON approach with grouping
+# Process and chunk the patient data using a first-level key approach
 @st.cache_data
 def process_patient_data(data):
-    # First, flatten the JSON to get all paths
-    def collect_paths(data, prefix="", paths=None):
-        if paths is None:
-            paths = []
-
-        if isinstance(data, dict):
-            for key, value in data.items():
-                new_prefix = f"{prefix}.{key}" if prefix else key
-                collect_paths(value, new_prefix, paths)
-        elif isinstance(data, list):
-            for i, item in enumerate(data):
-                new_prefix = f"{prefix}[{i}]"
-                collect_paths(item, new_prefix, paths)
-        else:
-            # This is a leaf node
-            paths.append((prefix, data))
-
-        return paths
-
-    # Collect all paths
-    all_paths = collect_paths(data)
-
-    # Group paths by their top-level key
-    grouped_paths = {}
-    for path, value in all_paths:
-        top_level = path.split(".")[0]
-        if top_level not in grouped_paths:
-            grouped_paths[top_level] = []
-        grouped_paths[top_level].append((path, value))
-
-    # Create chunks from grouped paths
+    """
+    Process patient data to create one chunk per first-level key in the JSON.
+    """
     chunks = []
-    for top_level, paths in grouped_paths.items():
+
+    # Process each top-level key in the patient data
+    for top_level_key, top_level_value in data.items():
         # Format the section title
-        section_title = top_level.replace("_", " ").title()
+        section_title = top_level_key.replace("_", " ").title()
         content = f"## {section_title}\n\n"
 
-        # Group by second level if available
-        second_level_groups = {}
-        for path, value in paths:
-            parts = path.split(".")
-            if len(parts) > 1:
-                second_level = parts[1]
-                if "[" in second_level:  # Handle array indices
-                    second_level = second_level.split("[")[0]
+        if isinstance(top_level_value, dict):
+            # Process dictionary values
+            for key, value in top_level_value.items():
+                formatted_key = key.replace("_", " ").title()
 
-                if second_level not in second_level_groups:
-                    second_level_groups[second_level] = []
-                second_level_groups[second_level].append((path, value))
-            else:
-                # Direct properties of the top level
-                formatted_path = path.replace("_", " ").title()
-                content += f"- **{formatted_path}**: {value}  \n"
+                if isinstance(value, dict):
+                    # For nested dictionaries, format as a subsection
+                    content += f"### {formatted_key}\n\n"
+                    for sub_key, sub_value in value.items():
+                        sub_formatted_key = sub_key.replace("_", " ").title()
+                        content += f"- **{sub_formatted_key}**: {sub_value}\n"
+                    content += "\n"
+                elif isinstance(value, list):
+                    # For lists, format each item
+                    content += f"### {formatted_key}\n\n"
 
-        # Add second level groups
-        for second_level, subpaths in second_level_groups.items():
-            # Format the subsection title
-            subsection_title = second_level.replace("_", " ").title()
-            content += f"\n### {subsection_title}  \n"
+                    if all(isinstance(item, dict) for item in value):
+                        # If all items are dictionaries, format each one
+                        for i, item in enumerate(value):
+                            # Try to find a name or title for the item
+                            item_title = None
+                            for name_key in ["name", "condition", "test", "date"]:
+                                if name_key in item:
+                                    item_title = item[name_key]
+                                    break
 
-            # Check if this is a list of items
-            is_list = any("[" in path for path, _ in subpaths)
+                            if item_title:
+                                content += f"#### {item_title}\n\n"
+                            else:
+                                content += f"#### Item {i+1}\n\n"
 
-            if is_list:
-                # Group by list index
-                list_items = {}
-                for path, value in subpaths:
-                    # Extract the index from the path
-                    match = re.search(r"\[(\d+)\]", path)
-                    if match:
-                        index = int(match.group(1))
-                        if index not in list_items:
-                            list_items[index] = []
+                            for item_key, item_value in item.items():
+                                if item_key != name_key:  # Skip the key used as title
+                                    item_formatted_key = item_key.replace(
+                                        "_", " "
+                                    ).title()
+                                    content += (
+                                        f"- **{item_formatted_key}**: {item_value}\n"
+                                    )
+                            content += "\n"
+                    else:
+                        # For simple lists, just list the items
+                        for item in value:
+                            content += f"- {item}\n"
+                        content += "\n"
+                else:
+                    # For simple values, just add them as bullet points
+                    content += f"- **{formatted_key}**: {value}\n"
 
-                        # Get the property name (after the index)
-                        remaining_path = path.split("]")[-1]
-                        if remaining_path.startswith("."):
-                            remaining_path = remaining_path[1:]
+        elif isinstance(top_level_value, list):
+            # Process list values
+            if all(isinstance(item, dict) for item in top_level_value):
+                # If all items are dictionaries, format each one
+                for i, item in enumerate(top_level_value):
+                    # Try to find a name or title for the item
+                    item_title = None
+                    for name_key in ["name", "condition", "test", "date"]:
+                        if name_key in item:
+                            item_title = item[name_key]
+                            break
 
-                        property_name = (
-                            remaining_path.split(".")[-1] if remaining_path else "value"
-                        )
-                        list_items[index].append((property_name, value))
+                    if item_title:
+                        content += f"### {item_title}\n\n"
+                    else:
+                        content += f"### Item {i+1}\n\n"
 
-                # Format each list item
-                for index, properties in sorted(list_items.items()):
-                    # Try to find a name property for a better title
-                    item_name = next(
-                        (
-                            value
-                            for prop, value in properties
-                            if prop.lower() in ["name", "condition", "type"]
-                        ),
-                        f"Item {index+1}",
-                    )
-                    content += f"\n#### {item_name}  \n"
-
-                    for prop, value in properties:
-                        formatted_prop = prop.replace("_", " ").title()
-                        content += f"- **{formatted_prop}**: {value}  \n"
-
+                    for item_key, item_value in item.items():
+                        if item_key != name_key:  # Skip the key used as title
+                            item_formatted_key = item_key.replace("_", " ").title()
+                            content += f"- **{item_formatted_key}**: {item_value}\n"
                     content += "\n"
             else:
-                # Regular properties
-                for path, value in subpaths:
-                    # Get the property name (last part of the path)
-                    property_name = path.split(".")[-1]
-                    formatted_prop = property_name.replace("_", " ").title()
-                    content += f"- **{formatted_prop}**: {value}  \n"
+                # For simple lists, just list the items
+                for item in top_level_value:
+                    content += f"- {item}\n"
+                content += "\n"
+        else:
+            # For simple values, just add them as bullet points
+            content += f"- **Value**: {top_level_value}\n"
 
-        chunks.append({"content": content, "source": section_title})
+        # Add the chunk
+        chunks.append({"content": content, "source": top_level_key})
 
     return chunks
 
@@ -390,7 +372,7 @@ st.sidebar.write(f"**NHS Number:** {patient_data['patient']['nhs_number']}")
 st.sidebar.write(f"**Phone:** {patient_data['patient']['contact']['phone']}")
 st.sidebar.write(f"**Address:** {patient_data['patient']['contact']['address']}")
 st.sidebar.write(
-    f"**GP:** {patient_data['patient']['gp']['name']}, {patient_data['patient']['gp']['practice']}"
+    f"**GP:** {patient_data['gp']['name']}, {patient_data['gp']['practice']}"
 )
 
 # Add sidebar navigation links
