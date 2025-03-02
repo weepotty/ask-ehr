@@ -317,22 +317,18 @@ st.sidebar.write(
 
 # Add sidebar navigation links
 st.sidebar.header("Other links")
-sidebar_options = [
-    "Doctor's notes",
-    "Nurse's notes",
-    "Physiotherapy notes",
-    "Discharge summaries",
-    "Blood test results",
-    "Imaging reports",
-]
-
-# Initialize selected option in session state if it doesn't exist
-if "selected_option" not in st.session_state:
-    st.session_state.selected_option = None
+sidebar_options = {
+    "Doctor's notes": "https://weepotty.github.io/ask-ehr/docs/Doctors_Notes.pdf",
+    "Nurse's notes": "https://weepotty.github.io/ask-ehr/docs/Nursing_Notes.pdf",  # Replace with actual URLs
+    "Physiotherapy notes": "https://weepotty.github.io/ask-ehr/docs/Physiotherapy_Notes.pdf",
+    "Blood test results": "https://weepotty.github.io/ask-ehr/docs/expanded_blood_results_panel.png",
+    "Imaging reports": "https://weepotty.github.io/ask-ehr/docs/pacs.png",
+    "Echo report": "https://weepotty.github.io/ask-ehr/docs/echo_report.png",
+}
 
 # Create clickable links for each option
-for option in sidebar_options:
-    st.sidebar.button(option)
+for option, url in sidebar_options.items():
+    st.sidebar.markdown(f"[{option}]({url})")
 
 # Add a button to clear chat history
 if st.sidebar.button("Clear Chat History"):
