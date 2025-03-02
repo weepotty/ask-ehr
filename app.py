@@ -23,7 +23,7 @@ if "messages" not in st.session_state:
 # Load the patient data
 @st.cache_data
 def load_patient_data():
-    with open("data/data3.json", "r") as f:
+    with open("data/final_Data.json", "r") as f:
         return json.load(f)
 
 
@@ -394,7 +394,7 @@ st.sidebar.write(
 )
 
 # Add sidebar navigation links
-st.sidebar.header("Navigation")
+st.sidebar.header("Other links")
 sidebar_options = [
     "Doctor's notes",
     "Nurse's notes",
@@ -442,7 +442,6 @@ if query := st.chat_input("Ask a question about the patient"):
                 relevant_chunks = search_similar_chunks(
                     query, index, embeddings, embedding_model, chunks
                 )
-                print(relevant_chunks)
                 # Create context from relevant chunks
                 context = "\n\n".join(relevant_chunks)
 
@@ -498,7 +497,6 @@ if query := st.chat_input("Ask a question about the patient"):
                 st.session_state.messages.append(
                     {"role": "assistant", "content": error_msg}
                 )
-
 # Display all chunks for inspection
 with st.expander("View All Patient Data"):
     for i, chunk in enumerate(chunks):
