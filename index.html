@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Documents</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+        padding: 20px;
+        background-color: #f8f9fa;
+      }
+      h1 {
+        text-align: center;
+      }
+      ul {
+        list-style-type: none;
+        padding: 0;
+      }
+      li {
+        margin: 10px 0;
+      }
+      a {
+        text-decoration: none;
+        color: #007bff;
+        font-size: 18px;
+      }
+      a:hover {
+        text-decoration: underline;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Available Documents</h1>
+    <ul id="document-list"></ul>
+
+    <script>
+      // Manually define the document list
+      const documents = [
+        "Doctors_Notes.pdf",
+        "Nursing_Notes.pdf",
+        "Physiotherapy_Notes.pdf",
+        "MRI_Brain_Report.pdf",
+        "expanded_blood_results_panel.png",
+        "echo_report.png",
+        "pacs.png",
+      ];
+
+      const listContainer = document.getElementById("document-list");
+
+      documents.forEach((file) => {
+        const listItem = document.createElement("li");
+        const anchor = document.createElement("a");
+        anchor.href = `docs/${file}`;
+        anchor.textContent = file;
+        anchor.target = "_blank";
+        listItem.appendChild(anchor);
+        listContainer.appendChild(listItem);
+      });
+    </script>
+  </body>
+</html>
