@@ -323,7 +323,7 @@ sidebar_options = {
     "Physiotherapy notes": "https://weepotty.github.io/ask-ehr/docs/Physiotherapy_Notes.pdf",
     "Blood test results": "https://weepotty.github.io/ask-ehr/docs/expanded_blood_results_panel.png",
     "Imaging reports": "https://weepotty.github.io/ask-ehr/docs/pacs.png",
-    "Echo report": "https://weepotty.github.io/ask-ehr/docs/echo_report.png",
+    "Echo report": "https://weepotty.github.io/ask-ehr/docs/echo_result.pdf",
 }
 
 # Create clickable links for each option
