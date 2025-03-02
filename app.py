@@ -319,17 +319,41 @@ st.sidebar.write(
 st.sidebar.header("Other links")
 sidebar_options = {
     "Medicines Reconciliation": "https://weepotty.github.io/ask-ehr/docs/Medication_History.pdf",
-    "Doctor's notes": "https://weepotty.github.io/ask-ehr/docs/Doctors_Notes.pdf",
-    "Nurse's notes": "https://weepotty.github.io/ask-ehr/docs/Nursing_Notes.pdf",  # Replace with actual URLs
+}
+
+# Create collapsible section for Doctor's notes
+with st.sidebar.expander("Doctor's Notes"):
+    st.markdown(
+        "[Neurology Letter 1](https://weepotty.github.io/ask-ehr/docs/Neurology%20Letter%201.pdf)"
+    )
+    st.markdown(
+        "[Neurology Letter 2](https://weepotty.github.io/ask-ehr/docs/Neurology%20Letter%202.pdf)"
+    )
+    st.markdown(
+        "[Neurology Letter 3](https://weepotty.github.io/ask-ehr/docs/Neurology%20Letter%203.pdf)"
+    )
+    st.markdown(
+        "[ED Discharge Letter](https://weepotty.github.io/ask-ehr/docs/ED%20Seizure%20Episode.pdf)"
+    )
+    st.markdown(
+        "[Cardiology Outpatient Letter](https://weepotty.github.io/ask-ehr/docs/Cardiology%20Clinic%20Letter.pdf)"
+    )
+
+# Rest of the sidebar options
+remaining_options = {
+    "Nurse's notes": "https://weepotty.github.io/ask-ehr/docs/Nursing_Notes.pdf",
     "Physiotherapy notes": "https://weepotty.github.io/ask-ehr/docs/Physiotherapy_Notes.pdf",
     "Blood test results": "https://weepotty.github.io/ask-ehr/docs/expanded_blood_results_panel.png",
     "Imaging reports": "https://weepotty.github.io/ask-ehr/docs/pacs.png",
     "Echo report": "https://weepotty.github.io/ask-ehr/docs/echo_result.pdf",
 }
 
-# Create clickable links for each option
+# Create buttons that link to URLs
 for option, url in sidebar_options.items():
-    st.sidebar.markdown(f"[{option}]({url})")
+    st.sidebar.link_button(option, url, type="secondary")
+
+for option, url in remaining_options.items():
+    st.sidebar.link_button(option, url, type="secondary")
 
 # Add a button to clear chat history
 if st.sidebar.button("Clear Chat History"):
