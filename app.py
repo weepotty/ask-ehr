@@ -1,14 +1,14 @@
 # Import necessary libraries
-from sentence_transformers import SentenceTransformer
 import json
+import os
+
+from sentence_transformers import SentenceTransformer
 import streamlit as st
 import numpy as np
 import faiss
-import os
 from dotenv import load_dotenv
 from huggingface_hub import InferenceClient
 from transformers import T5Tokenizer, T5ForConditionalGeneration
-import re
 
 load_dotenv()
 # Set up Streamlit page
@@ -158,90 +158,26 @@ def create_faiss_index(embeddings):
     return index
 
 
-# Improve the function to find which chunks were actually used in the answer
+# Simplify the find_referenced_chunks function to return entire chunks
 def find_referenced_chunks(answer, chunks, relevant_chunks):
     """
-    Identify which chunks were actually referenced in the answer with stricter filtering.
+    Simply return the entire chunks that were used to generate the answer.
     """
     referenced_chunks = []
     seen_sources = set()  # Track sources we've already included
-    answer_lower = answer.lower()
 
-    # For each relevant chunk, check if specific content from it appears in the answer
-    for chunk in relevant_chunks:
-        # Extract specific data points from the chunk
-        key_phrases = []
+    # For each relevant chunk
+    for chunk_content in relevant_chunks:
+        # Find the original chunk
+        for chunk in chunks:
+            if chunk["content"] == chunk_content:
+                # Skip if we've already included this source
+                if chunk["source"] in seen_sources:
+                    continue
 
-        # Extract values from markdown bullet points (more specific matching)
-        bullet_points = re.findall(r"\*\*(.*?)\*\*: (.*?)(?:\n|$)", chunk)
-        for key, value in bullet_points:
-            # Only consider substantial values (not dates or single words)
-            if len(value.strip()) > 5 and not re.match(
-                r"^\d{4}-\d{2}-\d{2}$", value.strip()
-            ):
-                key_phrases.append((key.lower(), value.strip().lower()))
-
-        # Check if any specific key-value pair is in the answer
-        is_referenced = False
-        matching_phrases = []
-
-        for key, phrase in key_phrases:
-            # Check for the specific value
-            if phrase in answer_lower and len(phrase) > 5:
-                is_referenced = True
-                matching_phrases.append((key, phrase))
-
-        # Only include chunks with specific matching content
-        if is_referenced:
-            # Get the source from the original chunk
-            source = next(
-                (c["source"] for c in chunks if c["content"] == chunk), "Unknown"
-            )
-
-            # Skip if we've already included this source
-            if source in seen_sources:
-                continue
-
-            seen_sources.add(source)
-
-            # Create a mini-chunk with just the matching information
-            mini_chunk = ""
-
-            # Get the section title from the chunk
-            section_match = re.search(r"^## (.*?)$", chunk, re.MULTILINE)
-            if section_match:
-                section_title = section_match.group(1)
-                mini_chunk += f"## {section_title}\n\n"
-
-            # Add only the matching bullet points
-            for key, phrase in matching_phrases:
-                # Find the original formatting of the key and value
-                for original_key, original_value in bullet_points:
-                    if original_key.lower() == key and phrase in original_value.lower():
-                        mini_chunk += f"- **{original_key}**: {original_value}\n"
-
-            # Add this mini-chunk to the referenced chunks
-            if mini_chunk:
-                referenced_chunks.append(
-                    {"content": mini_chunk.strip(), "source": source}
-                )
-
-    # If no chunks were referenced, include a minimal version of the most relevant chunk
-    if not referenced_chunks and relevant_chunks:
-        # Get the most relevant chunk
-        most_relevant = relevant_chunks[0]
-        source = next(
-            (c["source"] for c in chunks if c["content"] == most_relevant), "Unknown"
-        )
-
-        # Extract the section title
-        section_match = re.search(r"^## (.*?)$", most_relevant, re.MULTILINE)
-        section_title = section_match.group(1) if section_match else "Information"
-
-        # Create a minimal chunk with just the section title
-        mini_chunk = f"## {section_title}\n\n(Most relevant section)"
-
-        referenced_chunks.append({"content": mini_chunk, "source": source})
+                seen_sources.add(chunk["source"])
+                referenced_chunks.append(chunk)
+                break
 
     return referenced_chunks
 
