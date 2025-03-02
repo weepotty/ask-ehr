@@ -13,7 +13,11 @@ from transformers import T5Tokenizer, T5ForConditionalGeneration
 load_dotenv()
 # Set up Streamlit page
 st.set_page_config(page_title="Patient Information QA System", layout="wide")
+col1, col2, col3 = st.columns([1, 1, 1])
+with col2:
+    st.image("ask_err.png", width=200)
 st.title("Ask EHR")
+
 
 # Initialize chat history in session state if it doesn't exist
 if "messages" not in st.session_state:
