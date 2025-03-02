@@ -318,6 +318,7 @@ st.sidebar.write(
 # Add sidebar navigation links
 st.sidebar.header("Other links")
 sidebar_options = {
+    "Medicines Reconciliation": "https://weepotty.github.io/ask-ehr/docs/Medication_History.pdf",
     "Doctor's notes": "https://weepotty.github.io/ask-ehr/docs/Doctors_Notes.pdf",
     "Nurse's notes": "https://weepotty.github.io/ask-ehr/docs/Nursing_Notes.pdf",  # Replace with actual URLs
     "Physiotherapy notes": "https://weepotty.github.io/ask-ehr/docs/Physiotherapy_Notes.pdf",
