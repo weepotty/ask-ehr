@@ -72,62 +72,60 @@
       "start_date": "2018-09-22"
     }
   ],
-  "results": {
-    "blood_tests": [
-      {
-        "date_requested": "2024-03-10",
-        "tests": [
-          {
-            "test": "Haemoglobin",
-            "value": "14.2 g/dL",
-            "reference_range": "13.5-17.5 g/dL"
-          },
-          {
-            "test": "White Blood Cell Count",
-            "value": "6.8 x10^9/L",
-            "reference_range": "4.0-11.0 x10^9/L"
-          },
-          {
-            "test": "Platelets",
-            "value": "250 x10^9/L",
-            "reference_range": "150-400 x10^9/L"
-          }
-        ]
-      },
-      {
-        "date_requested": "2023-09-20",
-        "tests": [
-          {
-            "test": "Sodium",
-            "value": "140 mmol/L",
-            "reference_range": "135-145 mmol/L"
-          },
-          {
-            "test": "Potassium",
-            "value": "4.2 mmol/L",
-            "reference_range": "3.5-5.1 mmol/L"
-          },
-          {
-            "test": "Creatinine",
-            "value": "85 µmol/L",
-            "reference_range": "60-110 µmol/L"
-          }
-        ]
-      }
-    ],
-    "imaging_tests": [
-      {
-        "date": "2023-11-15",
-        "test": "Echocardiogram",
-        "findings": "Normal left ventricular function, no valvular abnormalities."
-      },
-      {
-        "date": "2022-09-30",
-        "test": "MRI Brain",
-        "findings": "Mild right temporal atrophy, no acute pathology."
-      }
-    ]
-  },
+  "blood_tests": [
+    {
+      "date_requested": "2024-03-10",
+      "tests": [
+        {
+          "test": "Haemoglobin",
+          "value": "14.2 g/dL",
+          "reference_range": "13.5-17.5 g/dL"
+        },
+        {
+          "test": "White Blood Cell Count",
+          "value": "6.8 x10^9/L",
+          "reference_range": "4.0-11.0 x10^9/L"
+        },
+        {
+          "test": "Platelets",
+          "value": "250 x10^9/L",
+          "reference_range": "150-400 x10^9/L"
+        }
+      ]
+    },
+    {
+      "date_requested": "2023-09-20",
+      "tests": [
+        {
+          "test": "Sodium",
+          "value": "140 mmol/L",
+          "reference_range": "135-145 mmol/L"
+        },
+        {
+          "test": "Potassium",
+          "value": "4.2 mmol/L",
+          "reference_range": "3.5-5.1 mmol/L"
+        },
+        {
+          "test": "Creatinine",
+          "value": "85 µmol/L",
+          "reference_range": "60-110 µmol/L"
+        }
+      ]
+    }
+  ],
+  "imaging_tests": [
+    {
+      "date": "2023-11-15",
+      "test": "Echocardiogram",
+      "findings": "Normal left ventricular function, no valvular abnormalities."
+    },
+    {
+      "date": "2022-09-30",
+      "test": "MRI Brain",
+      "findings": "Mild right temporal atrophy, no acute pathology."
+    }
+  ],
   "admissions": [
     {
       "admission_date": "2021-08-15",
