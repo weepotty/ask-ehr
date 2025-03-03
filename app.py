@@ -334,14 +334,9 @@ with st.sidebar.expander("Doctor's Notes"):
     st.markdown(
         "[ED Discharge Letter](https://weepotty.github.io/ask-ehr/docs/ED%20Seizure%20Episode.pdf)"
     )
-    st.markdown(
-        "[Cardiology Outpatient Letter](https://weepotty.github.io/ask-ehr/docs/Cardiology%20Clinic%20Letter.pdf)"
-    )
 
 # Rest of the sidebar options
 remaining_options = {
-    "Nurse's notes": "https://weepotty.github.io/ask-ehr/docs/Nursing_Notes.pdf",
-    "Physiotherapy notes": "https://weepotty.github.io/ask-ehr/docs/Physiotherapy_Notes.pdf",
     "Blood test results": "https://weepotty.github.io/ask-ehr/docs/expanded_blood_results_panel.png",
     "Imaging reports": "https://weepotty.github.io/ask-ehr/docs/pacs.png",
     "Echo report": "https://weepotty.github.io/ask-ehr/docs/echo_result.pdf",
